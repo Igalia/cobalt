@@ -135,23 +135,24 @@ def resolve_conflicts(unmerged_files):
     elif is_submodule:
       submodule_conflicts.append(path)
     else:
-      base = subprocess.run(['git', 'show', f':1:{path}'],
-                            capture_output=True,
-                            check=False)
-      ours = subprocess.run(['git', 'show', f':2:{path}'],
-                            capture_output=True,
-                            check=False)
-      theirs = subprocess.run(['git', 'show', f':3:{path}'],
-                              capture_output=True,
-                              check=False)
+      ours_theirs_diff = subprocess.run([
+          'git', 'diff', '--quiet', '--ignore-cr-at-eol', f':2:{path}',
+          f':3:{path}'
+      ],
+                                        capture_output=True,
+                                        check=False)
+      base_theirs_diff = subprocess.run([
+          'git', 'diff', '--quiet', '--ignore-cr-at-eol', f':1:{path}',
+          f':3:{path}'
+      ],
+                                        capture_output=True,
+                                        check=False)
 
       # ours and theirs are identical, no conflict
-      if (ours.returncode == 0 and theirs.returncode == 0 and
-          ours.stdout == theirs.stdout):
+      if ours_theirs_diff.returncode == 0:
         resolve_ours_conflicts.append(path)
-      # theirs and base are identical, commit has no change
-      elif (theirs.returncode == 0 and base.returncode == 0 and
-            theirs.stdout == base.stdout):
+      # base and theirs are identical, commit has no change
+      elif base_theirs_diff.returncode == 0:
         resolve_ours_conflicts.append(path)
       else:
         other_conflicts.append(path)
