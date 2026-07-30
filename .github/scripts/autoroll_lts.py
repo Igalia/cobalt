@@ -104,6 +104,14 @@ def get_unmerged_files():
   return files
 
 
+def is_diff_identical(path_a, path_b):
+  res = subprocess.run(
+      ['git', 'diff', '--quiet', '--ignore-cr-at-eol', path_a, path_b],
+      capture_output=True,
+      check=False)
+  return res.returncode == 0
+
+
 def resolve_conflicts(unmerged_files):
   """Attempts to resolve conflicts automatically.
 
@@ -135,24 +143,11 @@ def resolve_conflicts(unmerged_files):
     elif is_submodule:
       submodule_conflicts.append(path)
     else:
-      ours_theirs_diff = subprocess.run([
-          'git', 'diff', '--quiet', '--ignore-cr-at-eol', f':2:{path}',
-          f':3:{path}'
-      ],
-                                        capture_output=True,
-                                        check=False)
-      base_theirs_diff = subprocess.run([
-          'git', 'diff', '--quiet', '--ignore-cr-at-eol', f':1:{path}',
-          f':3:{path}'
-      ],
-                                        capture_output=True,
-                                        check=False)
-
       # ours and theirs are identical, no conflict
-      if ours_theirs_diff.returncode == 0:
+      if is_diff_identical(f':2:{path}', f':3:{path}'):
         resolve_ours_conflicts.append(path)
       # base and theirs are identical, commit has no change
-      elif base_theirs_diff.returncode == 0:
+      elif is_diff_identical(f':1:{path}', f':3:{path}'):
         resolve_ours_conflicts.append(path)
       else:
         other_conflicts.append(path)
