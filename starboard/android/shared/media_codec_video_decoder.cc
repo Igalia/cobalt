@@ -349,7 +349,10 @@ MediaCodecVideoDecoder::MediaCodecVideoDecoder(
       surface_view_(stream_config.surface_view
                         ? jni_zero::ScopedJavaGlobalRef<jobject>(
                               jni_zero::AttachCurrentThread(),
-                              static_cast<jobject>(stream_config.surface_view))
+                              jni_zero::JavaRef<jobject>::CreateLeaky(
+                                  jni_zero::AttachCurrentThread(),
+                                  static_cast<jobject>(
+                                      stream_config.surface_view)))
                         : nullptr),
       enable_flush_during_seek_(pipeline_config.enable_flush_during_seek),
       reset_delay_usec_(android_get_device_api_level() < 34
