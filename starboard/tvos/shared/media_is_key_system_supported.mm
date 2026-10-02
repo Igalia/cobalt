@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <string_view>
 
-#include "base/containers/contains.h"
 #include "starboard/common/string.h"
 #include "starboard/media.h"
 #include "starboard/tvos/shared/media/drm_system_platform.h"
@@ -35,7 +35,7 @@ bool MediaIsKeySystemSupported(SbMediaVideoCodec video_codec,
       "com.widevine.alpha",
   };
 
-  if (base::Contains(kSupportedWidevineSystems, key_system)) {
+  if (std::ranges::contains(kSupportedWidevineSystems, key_system)) {
     return true;
   }
 
